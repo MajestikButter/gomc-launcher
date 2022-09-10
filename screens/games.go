@@ -1,0 +1,47 @@
+package screens
+
+import (
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/widget"
+	"github.com/MajestikButter/gomc-launcher/ccontainer"
+	"github.com/MajestikButter/gomc-launcher/cwidget"
+	"github.com/MajestikButter/gomc-launcher/launcher"
+	"github.com/MajestikButter/gomc-launcher/preset"
+	"github.com/modfin/henry/mapz"
+	"github.com/modfin/henry/slicez"
+)
+
+func (s *Screens) CreateGames(l *launcher.Launcher) *fyne.Container {
+	le := len(l.Games) + 1
+	content := make([]fyne.CanvasObject, le)
+	sorted := slicez.SortFunc(mapz.Keys(l.Games), func(a string, b string) bool {
+		return a < b
+	})
+	for i, name := range sorted {
+		g := l.Games[name]
+		n := name
+		content[i] = preset.NewCardButton(name, "Open", g.Icon(), func() {
+			s.SetContent(s.CreateProfiles(l, g, n))
+		})
+	}
+	content[le-1] = widget.NewCard("", "", cwidget.NewIconButton(theme.ContentAddIcon(), func() {
+		name, game := l.NewGame("New Game")
+		s.SetContent(s.CreateGames(l))
+		s.DialogEditGame(l, game, name)
+	}))
+
+	scroll := container.NewVScroll(
+		container.NewGridWrap(
+			fyne.NewSize(200, 200),
+			content...,
+		),
+	)
+	return ccontainer.NewBarScreen(
+		preset.NewHeaderBar("Games", func() {
+			s.SetContent(s.CreateMenu(l))
+		}),
+		container.NewMax(scroll),
+	)
+}
