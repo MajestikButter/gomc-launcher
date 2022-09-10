@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -60,9 +61,21 @@ func main() {
 
 		w.Close()
 	})
+
+	ticker := time.NewTicker(150 * time.Second) // 2.5 Minutes
+	go func() {
+		for {
+			<-ticker.C
+			logger.Println("Autosaving launcher json files")
+			l.Save()
+		}
+	}()
+	logger.Println("Started save loop")
+
 	w.ShowAndRun()
 
 	l.Save()
+	logger.WriteLog()
 	// defer HandlePanic()
 
 	// fltk.InitStyles()
@@ -75,16 +88,6 @@ func main() {
 	// ERR_WIN = CreateErrWindow()
 	// EDIT_WIN = CreateEditWindow()
 	// MAIN_WIN = CreateMainWindow(Size, Pos)
-
-	// ticker := time.NewTicker(150 * time.Second) // 2.5 Minutes
-	// go func() {
-	// 	for {
-	// 		<-ticker.C
-	// 		logger.Println("Autosaving launcher json files")
-	// 		LAUNCHER.Save()
-	// 	}
-	// }()
-	// logger.Println("Started save loop")
 
 	// logger.Println("Showing launcher window")
 

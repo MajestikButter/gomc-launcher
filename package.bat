@@ -1,1 +1,1 @@
-fyne package -os windows -icon icon.png -exe bin/package.exe
+fyne package -os windows -icon icon.png -exe bin/gomc-launcher.exe
