@@ -16,44 +16,47 @@ import (
 func (s *Screens) DialogEditGame(l *launcher.Launcher, g *game.Game, name string) {
 	var d dialog.Dialog
 	n := &name
-	content := container.NewVBox(
-		preset.NewInputSetting("Name", *n, func(text string) {
-			*n = text
-		}),
-		widget.NewSeparator(),
-		widget.NewAccordion(
-			widget.NewAccordionItem("Advanced", container.NewVBox(
-				preset.NewInputSetting("Launch Script", g.LaunchScript, func(text string) {
-					g.LaunchScript = text
-				}),
-				preset.NewFileSetting(s.Window, "Profile Destination", g.Destination, func(path string) {
-					g.Destination = path
-				}),
-				widget.NewButtonWithIcon("Delete", theme.DeleteIcon(), func() {
-					msg := widget.NewLabel(
-						fmt.Sprintf("This action is irreversible and cannot be undone. Be sure you would like to delete '%s' before clicking the 'Delete' button below", *n),
-					)
-					msg.Wrapping = fyne.TextWrapWord
+	content := container.NewHBox(
+		container.NewVBox(
+			preset.NewInputSetting("Name", *n, func(text string) {
+				*n = text
+			}),
+			widget.NewSeparator(),
+			widget.NewAccordion(
+				widget.NewAccordionItem("Advanced", container.NewVBox(
+					preset.NewInputSetting("Launch Script", g.LaunchScript, func(text string) {
+						g.LaunchScript = text
+					}),
+					preset.NewFolderSetting(s.Window, "Profile Destination", g.Destination, false, func(path string) {
+						g.Destination = path
+					}, nil, nil),
+					widget.NewButtonWithIcon("Delete", theme.DeleteIcon(), func() {
+						msg := widget.NewLabel(
+							fmt.Sprintf("This action is irreversible and cannot be undone. Be sure you would like to delete '%s' before clicking the 'Delete' button below", *n),
+						)
+						msg.Wrapping = fyne.TextWrapWord
 
-					dialog.ShowCustomConfirm(
-						"Are you sure you want to delete this game?",
-						"Delete",
-						"Cancel",
-						msg,
-						func(b bool) {
-							if !b {
-								return
-							}
-							delete(l.Games, *n)
-							s.SetContent(s.CreateGames(l))
-							d.Hide()
-						},
-						s.Window,
-					)
-				}),
-			)),
+						dialog.ShowCustomConfirm(
+							"Are you sure you want to delete this game?",
+							"Delete",
+							"Cancel",
+							msg,
+							func(b bool) {
+								if !b {
+									return
+								}
+								delete(l.Games, *n)
+								s.SetContent(s.CreateGames(l))
+								d.Hide()
+							},
+							s.Window,
+						)
+					}),
+				)),
+			),
+			widget.NewLabel("                                                                                                     "),
 		),
-		widget.NewLabel("                                                                                                                      "),
+		preset.NewIconSetting(s.Window, g),
 	)
 
 	d = dialog.NewCustom("Game Settings", "Close", content, s.Window)

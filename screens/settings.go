@@ -19,9 +19,9 @@ func (s *Screens) CreateSettings(l *launcher.Launcher) *fyne.Container {
 		widget.NewSeparator(),
 		widget.NewAccordion(
 			widget.NewAccordionItem("Advanced", container.NewVBox(
-				preset.NewFileSetting(s.Window, "Logs Directory", l.LogsDirectory, func(path string) {
+				preset.NewFolderSetting(s.Window, "Logs Directory", l.LogsDirectory, false, func(path string) {
 					l.LogsDirectory = path
-				}),
+				}, nil, nil),
 			)),
 		),
 		widget.NewLabel("                                                                                                                      "),

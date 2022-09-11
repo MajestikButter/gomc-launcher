@@ -41,6 +41,10 @@ func (s *Screens) CreateGames(l *launcher.Launcher) *fyne.Container {
 	return ccontainer.NewBarScreen(
 		preset.NewHeaderBar("Games", func() {
 			s.SetContent(s.CreateMenu(l))
+			m := s.Canvas().Size()
+			l.WindowSize.X = m.Width
+			l.WindowSize.Y = m.Height
+			s.Resize(fyne.NewSize(0, 0))
 		}),
 		container.NewMax(scroll),
 	)

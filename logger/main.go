@@ -28,13 +28,14 @@ func Path() string {
 }
 
 func WriteLog() {
-	buf := make([]byte, 500000)
+	buf := make([]byte, 50000)
 	n, err := LOG_READER.Read(buf)
 	if err != nil {
+		fmt.Println(err)
 		panic(err)
 	}
 
-	fmt.Println("Written to stdout:", string(buf[:n]))
+	// fmt.Println("Written to stdout:", string(buf[:n]))
 
 	t := time.Now()
 	l := path.Join(Path(), t.Format("LOG_2006-01-02_15-04-05.txt"))
@@ -42,7 +43,7 @@ func WriteLog() {
 	os.WriteFile(l, buf[:n], FILE_MODE)
 }
 
-func InitLog() {
+func init() {
 	lp := Path()
 	if _, err := os.Stat(lp); os.IsNotExist(err) {
 		os.MkdirAll(lp, FILE_MODE)
@@ -63,9 +64,9 @@ func timeString() string {
 }
 
 // Printf without time prefix
-func RPrintf(a ...any) {
-	fmt.Print(a...)
-	STDOUT.WriteString(fmt.Sprint(a...))
+func RPrintf(format string, a ...any) {
+	fmt.Printf(format, a...)
+	STDOUT.WriteString(fmt.Sprintf(format, a...))
 }
 
 // similar to log.Print

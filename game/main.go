@@ -7,6 +7,7 @@ import (
 	"path"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -18,43 +19,45 @@ import (
 
 const FILE_MODE = 0777
 
-type Profile struct {
-	Path       string            `json:"path"`
-	Subfolders map[string]string `json:"subfolders"`
-	IconPath   string            `json:"iconPath"`
-	icon       fyne.Resource
+type IconStruct struct {
+	IconPathR string `json:"iconPath"`
+	icon      fyne.Resource
+	iconPath  string
 }
 
-func (p *Profile) Icon() fyne.Resource {
-	if p.icon == nil {
-		i, err := fyne.LoadResourceFromPath(p.IconPath)
+func (s *IconStruct) Icon() fyne.Resource {
+	if s.icon == nil || s.iconPath != s.IconPathR {
+		i, err := fyne.LoadResourceFromPath(s.IconPathR)
 		if err != nil {
 			return theme.AccountIcon()
 		}
-		p.icon = i
+		s.icon = i
+		s.iconPath = s.IconPathR
 	}
-	return p.icon
+	return s.icon
+}
+
+func (s *IconStruct) IconPath() string {
+	return s.IconPathR
+}
+
+func (s *IconStruct) SetIconPath(path string) {
+	s.IconPathR = path
+}
+
+type Profile struct {
+	IconStruct
+	Path       string            `json:"path"`
+	Subfolders map[string]string `json:"subfolders"`
 }
 
 type Game struct {
+	IconStruct
 	Profiles        map[string]*Profile `json:"profiles"`
 	LaunchScript    string              `json:"launchScript"`
 	Destination     string              `json:"destination"`
 	SecurityID      string              `json:"securityID"`
 	SelectedProfile string              `json:"selectedProfile"`
-	IconPath        string              `json:"iconPath"`
-	icon            fyne.Resource
-}
-
-func (g *Game) Icon() fyne.Resource {
-	if g.icon == nil {
-		i, err := fyne.LoadResourceFromPath(g.IconPath)
-		if err != nil {
-			return theme.AccountIcon()
-		}
-		g.icon = i
-	}
-	return g.icon
 }
 
 var lastLoad = time.Now()
@@ -153,10 +156,9 @@ func (g *Game) CreateSymlink(from, to, secId string) {
 
 func (g *Game) NewProfile(name string, path string) (string, *Profile) {
 	profile := &Profile{
+		IconStruct{},
 		path,
 		map[string]string{},
-		"",
-		nil,
 	}
 	n := g.ValidifyName(name)
 	g.Profiles[n] = profile
@@ -225,25 +227,26 @@ func cwd() string {
 
 func NewGame(launchScript, destination, secId string) *Game {
 	g := &Game{
+		IconStruct{},
 		map[string]*Profile{},
 		launchScript,
 		destination,
 		secId,
 		"Default",
-		"",
-		nil,
 	}
 	g.NewProfile("Default", cwd())
 	return g
 }
 
-func newMCProf(family, secId, profSubDir string) *Game {
-	pPath := path.Join(cwd(), "data", "profiles", profSubDir, "default")
+func newMCProf(family, secId, name string) *Game {
+	c := cwd()
+	pPath := path.Join(c, "data", "profiles", name, "default")
 	g := NewGame(
 		fmt.Sprintf("shell:appsFolder\\%s!App", family),
 		path.Join(os.Getenv("LOCALAPPDATA"), "Packages", family, "LocalState", "games", "com.mojang"),
 		secId,
 	)
+	g.SetIconPath(path.Join(c, "assets", strings.ToLower(name)+".png"))
 	g.NewProfile("Default", pPath)
 	return g
 }

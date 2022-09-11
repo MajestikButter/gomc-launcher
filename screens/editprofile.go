@@ -17,41 +17,44 @@ func (s *Screens) DialogEditProfile(l *launcher.Launcher, g *game.Game, p *game.
 	var d dialog.Dialog
 	oldName := name
 	n := &name
-	content := container.NewVBox(
-		preset.NewInputSetting("Name", *n, func(text string) {
-			*n = text
-		}),
-		widget.NewSeparator(),
-		widget.NewAccordion(
-			widget.NewAccordionItem("Advanced", container.NewVBox(
-				preset.NewFileSetting(s.Window, "Path", p.Path, func(path string) {
-					p.Path = path
-				}),
-				widget.NewButtonWithIcon("Delete", theme.DeleteIcon(), func() {
-					msg := widget.NewLabel(
-						fmt.Sprintf("This action is irreversible and cannot be undone. Be sure you would like to delete '%s' before clicking the 'Delete' button below", *n),
-					)
-					msg.Wrapping = fyne.TextWrapWord
+	content := container.NewHBox(
+		container.NewVBox(
+			preset.NewInputSetting("Name", *n, func(text string) {
+				*n = text
+			}),
+			widget.NewSeparator(),
+			widget.NewAccordion(
+				widget.NewAccordionItem("Advanced", container.NewVBox(
+					preset.NewFolderSetting(s.Window, "Path", p.Path, false, func(path string) {
+						p.Path = path
+					}, nil, nil),
+					widget.NewButtonWithIcon("Delete", theme.DeleteIcon(), func() {
+						msg := widget.NewLabel(
+							fmt.Sprintf("This action is irreversible and cannot be undone. Be sure you would like to delete '%s' before clicking the 'Delete' button below", *n),
+						)
+						msg.Wrapping = fyne.TextWrapWord
 
-					dialog.ShowCustomConfirm(
-						"Are you sure you want to delete this profile?",
-						"Delete",
-						"Cancel",
-						msg,
-						func(b bool) {
-							if !b {
-								return
-							}
-							delete(g.Profiles, *n)
-							s.SetContent(s.CreateProfiles(l, g, *n))
-							d.Hide()
-						},
-						s.Window,
-					)
-				}),
-			)),
+						dialog.ShowCustomConfirm(
+							"Are you sure you want to delete this profile?",
+							"Delete",
+							"Cancel",
+							msg,
+							func(b bool) {
+								if !b {
+									return
+								}
+								delete(g.Profiles, *n)
+								s.SetContent(s.CreateProfiles(l, g, *n))
+								d.Hide()
+							},
+							s.Window,
+						)
+					}),
+				)),
+			),
+			widget.NewLabel("                                                                                                     "),
 		),
-		widget.NewLabel("                                                                                                                      "),
+		preset.NewIconSetting(s.Window, p),
 	)
 	d = dialog.NewCustom("Edit Profile", "Close", content, s.Window)
 	d.Show()

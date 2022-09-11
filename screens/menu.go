@@ -11,6 +11,11 @@ import (
 )
 
 func (s *Screens) CreateMenu(l *launcher.Launcher) *fyne.Container {
+	ctext := widget.NewRichTextFromMarkdown(l.Changelog())
+	ctext.Wrapping = fyne.TextWrapWord
+	changelog := container.NewVScroll(ctext)
+	changelog.SetMinSize(fyne.NewSize(700, 300))
+
 	return container.NewVBox(
 		container.NewHBox(
 			layout.NewSpacer(),
@@ -22,6 +27,7 @@ func (s *Screens) CreateMenu(l *launcher.Launcher) *fyne.Container {
 		layout.NewSpacer(),
 		container.NewHBox(
 			container.NewVBox(
+				layout.NewSpacer(),
 				widget.NewButtonWithIcon("GitHub", theme.ColorPaletteIcon(), func() {
 					s.OpenURL(GIT_URL)
 				}),
@@ -31,18 +37,23 @@ func (s *Screens) CreateMenu(l *launcher.Launcher) *fyne.Container {
 				widget.NewButtonWithIcon("Youtube", theme.ColorPaletteIcon(), func() {
 					s.OpenURL(YT_URL)
 				}),
+				layout.NewSpacer(),
 			),
-			layout.NewSpacer(),
-			widget.NewButton("Launch", func() {
-				s.SetContent(s.CreateGames(l))
-			}),
-			layout.NewSpacer(),
+			container.NewVBox(
+				widget.NewRichTextFromMarkdown("# Changelogs"),
+				changelog,
+				widget.NewButton("Launch", func() {
+					s.SetContent(s.CreateGames(l))
+					m := l.WindowSize
+					s.Resize(fyne.NewSize(m.X, m.Y))
+				}),
+			),
 		),
 		layout.NewSpacer(),
 		container.NewHBox(
 			widget.NewLabel("Created by MajestikButter"),
 			layout.NewSpacer(),
-			widget.NewLabel("V 0.0.1"),
+			widget.NewLabel(l.Version()),
 		),
 	)
 }

@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/MajestikButter/gomc-launcher/game"
 )
@@ -66,6 +68,33 @@ func (l *Launcher) ValidifyName(name string) string {
 	} else {
 		return name
 	}
+}
+
+var changelog, version string
+
+func (*Launcher) Changelog() string {
+	if changelog != "" {
+		return changelog
+	}
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
+	contents, err := os.ReadFile(path.Join(cwd, "changelog.md"))
+	if err != nil {
+		return ""
+	}
+	changelog = string(contents)
+	return changelog
+}
+
+func (*Launcher) Version() string {
+	if version != "" {
+		return version
+	}
+	version = strings.Split(changelog, "\n")[0][2:]
+	return version
 }
 
 // var lastLoad = time.Now()

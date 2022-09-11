@@ -38,9 +38,8 @@ func main() {
 
 	a := app.New()
 
-	w := a.NewWindow("GO Launcher")
-	ws := l.WindowSize
-	w.Resize(fyne.NewSize(ws.X, ws.Y))
+	w := a.NewWindow("GOMC Launcher")
+	w.Resize(fyne.NewSize(0, 0))
 	w.CenterOnScreen()
 
 	aw := a.NewWindow("GO Launcher")
@@ -53,11 +52,13 @@ func main() {
 
 	w.SetMaster()
 	w.SetCloseIntercept(func() {
-		st := l.WindowSize
-		s := w.Content().Size()
+		if !w.FixedSize() {
+			st := l.WindowSize
+			s := w.Canvas().Size()
 
-		st.X = s.Width
-		st.Y = s.Height
+			st.X = s.Width
+			st.Y = s.Height
+		}
 
 		w.Close()
 	})
@@ -76,27 +77,4 @@ func main() {
 
 	l.Save()
 	logger.WriteLog()
-	// defer HandlePanic()
-
-	// fltk.InitStyles()
-	// fltk.SetScheme("gtk+")
-
-	// WinState := LAUNCHER.State.Window
-	// Size := WinState.Size
-	// Pos := WinState.Position
-
-	// ERR_WIN = CreateErrWindow()
-	// EDIT_WIN = CreateEditWindow()
-	// MAIN_WIN = CreateMainWindow(Size, Pos)
-
-	// logger.Println("Showing launcher window")
-
-	// LoadScreen(SCREENS.Home)
-	// MAIN_WIN.Show()
-
-	// fltk.Run()
-
-	// logger.Println("Saving launcher files and log")
-	// LAUNCHER.Save()
-	// logger.WriteLog()
 }
