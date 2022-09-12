@@ -1,56 +1,53 @@
 package screens
 
 import (
+	"errors"
 	"fmt"
+	"path"
+	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/MajestikButter/gomc-launcher/game"
-	"github.com/MajestikButter/gomc-launcher/launcher"
 	"github.com/MajestikButter/gomc-launcher/preset"
 )
 
-func (s *Screens) DialogEditProfile(l *launcher.Launcher, g *game.Game, p *game.Profile, name string) {
+func (s *Screens) DialogEditSubfolder(p *game.Profile, name string) {
 	var d dialog.Dialog
 	oldName := name
 	n := &name
-
-	subfolders := []fyne.CanvasObject{}
-	for f := range p.Subfolders {
-		n := f
-		subfolders = append(subfolders, container.NewHBox(
-			widget.NewLabel(f),
-			layout.NewSpacer(),
-			widget.NewButtonWithIcon("", theme.SettingsIcon(), func() {
-				s.DialogEditSubfolder(p, n)
-			}),
-		))
-	}
-	subScroll := container.NewVScroll(container.NewVBox(subfolders...))
-	subScroll.SetMinSize(fyne.NewSize(0, 80))
-
+	pa := strings.ReplaceAll(path.Clean(p.Path), `\`, "/")
 	content := container.NewHBox(
 		container.NewVBox(
-			preset.NewInputSetting("Name", *n, func(text string) {
-				*n = text
-			}),
+			preset.NewFolderSetting(s.Window, "Folder", *n,
+				func(pathStr string) error {
+					if !strings.HasPrefix(strings.ReplaceAll(path.Clean(pathStr), `\`, "/"), pa) {
+						return errors.New("folder must be a subfolder of the profile path")
+					}
+					return nil
+				},
+				func(path string) {
+					*n = path
+				},
+				func(text string) string {
+					if !strings.HasPrefix(strings.ReplaceAll(path.Clean(text), `\`, "/"), pa) {
+						return text
+					}
+					return text[len(pa):]
+				},
+				func(text string) string {
+					return path.Join(pa, text)
+				},
+			),
+			preset.NewFolderSetting(s.Window, "Destination", p.Subfolders[*n], nil, func(path string) {
+				p.Subfolders[oldName] = path
+			}, nil, nil),
 			widget.NewSeparator(),
 			widget.NewAccordion(
 				widget.NewAccordionItem("Advanced", container.NewVBox(
-					preset.NewFolderSetting(s.Window, "Path", p.Path, nil, func(path string) {
-						p.Path = path
-					}, nil, nil),
-
-					widget.NewCard("", "",
-						widget.NewAccordion(
-							widget.NewAccordionItem("Subfolders", subScroll),
-						),
-					),
-
 					widget.NewButtonWithIcon("Delete", theme.DeleteIcon(), func() {
 						msg := widget.NewLabel(
 							fmt.Sprintf("This action is irreversible and cannot be undone. Be sure you would like to delete '%s' before clicking the 'Delete' button below", *n),
@@ -58,7 +55,7 @@ func (s *Screens) DialogEditProfile(l *launcher.Launcher, g *game.Game, p *game.
 						msg.Wrapping = fyne.TextWrapWord
 
 						dialog.ShowCustomConfirm(
-							"Are you sure you want to delete this profile?",
+							"Are you sure you want to delete this subfolder?",
 							"Delete",
 							"Cancel",
 							msg,
@@ -66,8 +63,7 @@ func (s *Screens) DialogEditProfile(l *launcher.Launcher, g *game.Game, p *game.
 								if !b {
 									return
 								}
-								delete(g.Profiles, *n)
-								s.SetContent(s.CreateProfiles(l, g, *n))
+								delete(p.Subfolders, *n)
 								d.Hide()
 							},
 							s.Window,
@@ -79,13 +75,14 @@ func (s *Screens) DialogEditProfile(l *launcher.Launcher, g *game.Game, p *game.
 		),
 		preset.NewIconSetting(s.Window, p),
 	)
-	d = dialog.NewCustom("Edit Profile", "Close", content, s.Window)
+	d = dialog.NewCustom("Edit Subfolder", "Close", content, s.Window)
 	d.Show()
 
 	d.SetOnClosed(func() {
 		if oldName != name {
-			g.RenameProfile(oldName, name)
-			s.SetContent(s.CreateProfiles(l, g, name))
+			d := p.Subfolders[oldName]
+			delete(p.Subfolders, oldName)
+			p.Subfolders[name] = d
 		}
 	})
 }

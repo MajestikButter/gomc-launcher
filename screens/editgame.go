@@ -27,7 +27,7 @@ func (s *Screens) DialogEditGame(l *launcher.Launcher, g *game.Game, name string
 					preset.NewInputSetting("Launch Script", g.LaunchScript, func(text string) {
 						g.LaunchScript = text
 					}),
-					preset.NewFolderSetting(s.Window, "Profile Destination", g.Destination, false, func(path string) {
+					preset.NewFolderSetting(s.Window, "Profile Destination", g.Destination, nil, func(path string) {
 						g.Destination = path
 					}, nil, nil),
 					widget.NewButtonWithIcon("Delete", theme.DeleteIcon(), func() {

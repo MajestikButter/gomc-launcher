@@ -1,3 +1,15 @@
+# v0.2.0
+
+## Features
+
+- Added Subfolder editing ui to profiles
+
+## Bug fixes
+
+- Changed log system to prevent crash that could occur after several prints were made to the log
+
+#
+
 # v0.1.0
 
 ## Features
@@ -5,7 +17,7 @@
 - Added Icon setting to games and profiles
 - Added Changelog to main screen
 
-&nbsp;
+#
 
 # v0.0.1
 

@@ -7,11 +7,7 @@ import (
 	"time"
 )
 
-const FILE_MODE = 0777
-
-var LOG_READER *os.File
-
-var STDOUT *os.File
+var log = []byte{}
 
 var p string
 
@@ -27,35 +23,22 @@ func Path() string {
 	return p
 }
 
-func WriteLog() {
-	buf := make([]byte, 50000)
-	n, err := LOG_READER.Read(buf)
-	if err != nil {
-		fmt.Println(err)
-		panic(err)
+var f string
+
+func FilePath() string {
+	if f == "" {
+		t := time.Now()
+		f = path.Join(Path(), t.Format("LOG_2006-01-02_15-04-05.txt"))
 	}
-
-	// fmt.Println("Written to stdout:", string(buf[:n]))
-
-	t := time.Now()
-	l := path.Join(Path(), t.Format("LOG_2006-01-02_15-04-05.txt"))
-
-	os.WriteFile(l, buf[:n], FILE_MODE)
+	return f
 }
 
-func init() {
-	lp := Path()
-	if _, err := os.Stat(lp); os.IsNotExist(err) {
-		os.MkdirAll(lp, FILE_MODE)
-	}
+func WriteLog() {
+	os.WriteFile(FilePath(), log, 0777)
+}
 
-	STDOUT = os.Stdout
-	r, w, err := os.Pipe()
-	LOG_READER = r
-	if err != nil {
-		panic(err)
-	}
-	os.Stdout = w
+func writeString(data string) {
+	log = append(log, []byte(data)...)
 }
 
 func timeString() string {
@@ -66,26 +49,26 @@ func timeString() string {
 // Printf without time prefix
 func RPrintf(format string, a ...any) {
 	fmt.Printf(format, a...)
-	STDOUT.WriteString(fmt.Sprintf(format, a...))
+	writeString(fmt.Sprintf(format, a...))
 }
 
 // similar to log.Print
 func Print(a ...any) {
 	a = append([]any{timeString()}, a...)
 	fmt.Print(a...)
-	STDOUT.WriteString(fmt.Sprint(a...))
+	writeString(fmt.Sprint(a...))
 }
 
 // similar to log.Printf
 func Printf(format string, a ...any) {
 	format = timeString() + " " + format
 	fmt.Printf(format, a...)
-	STDOUT.WriteString(fmt.Sprintf(format, a...))
+	writeString(fmt.Sprintf(format, a...))
 }
 
 // similar to log.Println
 func Println(a ...any) {
 	a = append([]any{timeString()}, a...)
 	fmt.Println(a...)
-	STDOUT.WriteString(fmt.Sprintln(a...))
+	writeString(fmt.Sprintln(a...))
 }

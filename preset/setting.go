@@ -14,7 +14,6 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"github.com/MajestikButter/gomc-launcher/ccontainer"
 	"github.com/MajestikButter/gomc-launcher/clayout"
-	"github.com/MajestikButter/gomc-launcher/logger"
 )
 
 func NewSetting(label string, content fyne.CanvasObject) fyne.Widget {
@@ -37,7 +36,7 @@ func NewInputSetting(label, text string, changed func(text string)) fyne.Widget 
 }
 
 func NewFileSetting(
-	window fyne.Window, label, pathStr string, filter storage.FileFilter, canBeEmpty bool,
+	window fyne.Window, label, pathStr string, filter storage.FileFilter, validator func(path string) error,
 	changed func(path string), setText func(path string) string, valPath func(text string) string,
 ) fyne.Widget {
 	sPath := pathStr
@@ -49,12 +48,13 @@ func NewFileSetting(
 		pathw.SetText(sPath)
 	}
 	pathw.Validator = func(s string) error {
-		if s == "" {
-			if canBeEmpty {
-				return nil
-			} else {
-				return errors.New("empty path not allowed")
+		if validator != nil {
+			err := validator(s)
+			if err != nil {
+				return err
 			}
+		} else if s == "" {
+			return errors.New("path cannot be empty")
 		}
 
 		if valPath != nil {
@@ -101,9 +101,9 @@ func NewFileSetting(
 					}
 				}
 			}, window)
+			d.SetFilter(filter)
 
 			b, _ := path.Split(strings.ReplaceAll(path.Clean(sPath), `\`, "/"))
-			logger.Println(b)
 			u, err := storage.ParseURI("file://" + b)
 			if err != nil {
 				dialog.NewError(err, window).Show()
@@ -122,8 +122,8 @@ func NewFileSetting(
 }
 
 func NewFolderSetting(
-	window fyne.Window, label, pathStr string, canBeEmpty bool,
-	changed func(path string), setText func(path string) string, valPath func(text string) string,
+	window fyne.Window, label, pathStr string, validator func(path string) error,
+	changed func(path string), setText func(path string) string, unsetText func(text string) string,
 ) fyne.Widget {
 	sPath := pathStr
 
@@ -134,16 +134,17 @@ func NewFolderSetting(
 		pathw.SetText(sPath)
 	}
 	pathw.Validator = func(s string) error {
-		if s == "" {
-			if canBeEmpty {
-				return nil
-			} else {
-				return errors.New("empty path not allowed")
-			}
+		if unsetText != nil {
+			s = unsetText(s)
 		}
 
-		if valPath != nil {
-			s = valPath(s)
+		if validator != nil {
+			err := validator(s)
+			if err != nil {
+				return err
+			}
+		} else if s == "" {
+			return errors.New("path cannot be empty")
 		}
 
 		if len(strings.Split(strings.ReplaceAll(path.Clean(s), `\`, "/"), "/")) < 3 {
@@ -168,7 +169,6 @@ func NewFolderSetting(
 		&clayout.Expand{},
 		pathw,
 		widget.NewButtonWithIcon("", theme.FolderOpenIcon(), func() {
-			dialog.NewFileOpen(func(uc fyne.URIReadCloser, err error) {}, window).SetFilter(storage.NewExtensionFileFilter([]string{".png", ".jpg"}))
 			d := dialog.NewFolderOpen(func(lu fyne.ListableURI, err error) {
 				if lu != nil {
 					sPath = lu.Path()
@@ -180,7 +180,11 @@ func NewFolderSetting(
 				}
 			}, window)
 
-			u, err := storage.ParseURI("file://" + sPath)
+			s := sPath
+			if unsetText != nil {
+				s = unsetText(s)
+			}
+			u, err := storage.ParseURI("file://" + s)
 			if err != nil {
 				dialog.NewError(err, window).Show()
 				return
@@ -210,7 +214,9 @@ func NewIconSetting(window fyne.Window, provider IconProvider) *fyne.Container {
 			fyne.NewSize(270, 200),
 			icon,
 		),
-		NewFileSetting(window, "Icon", provider.IconPath(), storage.NewExtensionFileFilter([]string{".png", ".jpg"}), true, func(path string) {
+		NewFileSetting(window, "Icon", provider.IconPath(), storage.NewExtensionFileFilter([]string{".png", ".jpg"}), func(path string) error {
+			return nil
+		}, func(path string) {
 			provider.SetIconPath(path)
 			icon.SetResource(provider.Icon())
 		}, nil, nil),
