@@ -1,1 +1,2 @@
-fyne package -os windows -icon icon.png -exe bin/gomc-launcher.exe
+fyne package -os windows -exe bin/gomc-launcher.exe -icon icon.png
+go run tools/zip.go

@@ -5,6 +5,8 @@
 - Added Icon setting to games and profiles
 - Added Changelog to main screen
 
+&nbsp;
+
 # v0.0.1
 
 ## Initial Release
