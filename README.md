@@ -20,3 +20,11 @@ Sending the contents of the latest coresponding log file would also be recommend
 
 ## Feature Requests
 Feature requests should be posted on the [Issues](https://github.com/MajestikButter/gomc-launcher/issues) tab on github.
+
+## Images
+
+### Games Screen
+![image](https://user-images.githubusercontent.com/75375633/189564276-eeee1f47-60fd-4704-9172-79e46246bc71.png)
+
+### Profiles Screen
+![image](https://user-images.githubusercontent.com/75375633/189564073-3053c595-7fb0-4ef3-9392-202c768e5249.png)
