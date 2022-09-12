@@ -72,5 +72,6 @@ func main() {
 		{"assets/", "assets/"},
 		{"changelog.md", "changelog.md"},
 		{"LICENSE", "LICENSE"},
+		{"README.md", "README.md"},
 	})
 }
