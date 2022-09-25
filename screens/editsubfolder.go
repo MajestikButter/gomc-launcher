@@ -15,7 +15,7 @@ import (
 	"github.com/MajestikButter/gomc-launcher/preset"
 )
 
-func (s *Screens) DialogEditSubfolder(p *game.Profile, name string) {
+func (s *Screens) DialogEditSubfolder(p *game.Profile, name string, subVBox *fyne.Container) {
 	var d dialog.Dialog
 	oldName := name
 	n := &name
@@ -36,7 +36,7 @@ func (s *Screens) DialogEditSubfolder(p *game.Profile, name string) {
 					if !strings.HasPrefix(strings.ReplaceAll(path.Clean(text), `\`, "/"), pa) {
 						return text
 					}
-					return text[len(pa):]
+					return text[len(pa)+1:]
 				},
 				func(text string) string {
 					return path.Join(pa, text)
@@ -84,5 +84,6 @@ func (s *Screens) DialogEditSubfolder(p *game.Profile, name string) {
 			delete(p.Subfolders, oldName)
 			p.Subfolders[name] = d
 		}
+		s.RefreshSubfolders(p, subVBox)
 	})
 }

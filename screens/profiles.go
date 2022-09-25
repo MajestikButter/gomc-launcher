@@ -11,12 +11,15 @@ import (
 	"github.com/MajestikButter/gomc-launcher/cwidget"
 	"github.com/MajestikButter/gomc-launcher/game"
 	"github.com/MajestikButter/gomc-launcher/launcher"
+	"github.com/MajestikButter/gomc-launcher/logger"
 	"github.com/MajestikButter/gomc-launcher/preset"
 	"github.com/modfin/henry/mapz"
 	"github.com/modfin/henry/slicez"
 )
 
 func (s *Screens) CreateProfiles(l *launcher.Launcher, game *game.Game, name string) *fyne.Container {
+	defer logger.HandlePanic()
+
 	le := len(game.Profiles) + 1
 	content := make([]fyne.CanvasObject, le)
 	sorted := slicez.SortFunc(mapz.Keys(game.Profiles), func(a string, b string) bool {
@@ -62,6 +65,8 @@ func (s *Screens) CreateProfiles(l *launcher.Launcher, game *game.Game, name str
 		ccontainer.NewProfiles(
 			widget.NewRichTextFromMarkdown(fmt.Sprintf("# %s", name)),
 			widget.NewButton("Edit", func() {
+				defer logger.HandlePanic()
+
 				sel := game.Selected()
 				if sel == nil {
 					return
@@ -80,6 +85,8 @@ func (s *Screens) CreateProfiles(l *launcher.Launcher, game *game.Game, name str
 				// })
 			}),
 			widget.NewButtonWithIcon("Play", theme.NavigateNextIcon(), func() {
+				defer logger.HandlePanic()
+
 				sel := game.Selected()
 				if game.LaunchScript == "" || game.Destination == "" || sel == nil {
 					return
@@ -93,6 +100,8 @@ func (s *Screens) CreateProfiles(l *launcher.Launcher, game *game.Game, name str
 				}
 			}),
 			widget.NewButtonWithIcon("Settings", theme.SettingsIcon(), func() {
+				defer logger.HandlePanic()
+
 				// oldName := name
 
 				s.DialogEditGame(l, game, name)

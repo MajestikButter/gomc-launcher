@@ -1,3 +1,17 @@
+# v0.3.0
+
+## Improvements
+
+- File and folder pickers now use the windows file explorer dialogs
+- Subfolders now include a "New Subfolder" button
+
+## Fixes
+
+- Subfolders now refresh the edit profile ui after being edited
+- Folder settings will now open to the data path of the program installation when an invalid path is provided
+
+#
+
 # v0.2.1
 
 ## Bug fixes

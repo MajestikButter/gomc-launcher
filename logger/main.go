@@ -5,6 +5,8 @@ import (
 	"os"
 	"path"
 	"time"
+
+	"github.com/go-errors/errors"
 )
 
 var log = []byte{}
@@ -71,4 +73,13 @@ func Println(a ...any) {
 	a = append([]any{timeString()}, a...)
 	fmt.Println(a...)
 	writeString(fmt.Sprintln(a...))
+}
+
+func HandlePanic() {
+	if e := recover(); e != nil {
+		err := errors.Wrap(e, 2)
+		RPrintf("\n\n====================================[ ERROR ]====================================\n\nMessage: %s\n\nStack: %s\n\n=================================================================================\n\n", err.Error(), err.Stack())
+		WriteLog()
+		os.Exit(1)
+	}
 }

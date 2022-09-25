@@ -9,14 +9,20 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/MajestikButter/gomc-launcher/ccontainer"
 	"github.com/MajestikButter/gomc-launcher/clayout"
+	"github.com/MajestikButter/gomc-launcher/launcher"
+	"github.com/MajestikButter/gomc-launcher/logger"
+	"github.com/harry1453/go-common-file-dialog/cfd"
+	"github.com/harry1453/go-common-file-dialog/cfdutil"
+	"github.com/modfin/henry/slicez"
 )
 
 func NewSetting(label string, content fyne.CanvasObject) fyne.Widget {
+	defer logger.HandlePanic()
+
 	text := widget.NewRichTextFromMarkdown("### " + label)
 	content.Move(fyne.NewPos(0, text.MinSize().Height))
 	return widget.NewCard("", "",
@@ -36,7 +42,7 @@ func NewInputSetting(label, text string, changed func(text string)) fyne.Widget 
 }
 
 func NewFileSetting(
-	window fyne.Window, label, pathStr string, filter storage.FileFilter, validator func(path string) error,
+	window fyne.Window, label, pathStr, filter string, validator func(path string) error,
 	changed func(path string), setText func(path string) string, valPath func(text string) string,
 ) fyne.Widget {
 	sPath := pathStr
@@ -47,6 +53,9 @@ func NewFileSetting(
 	} else {
 		pathw.SetText(sPath)
 	}
+
+	filterSplit := slicez.Map(strings.Split(filter, ";"), func(a string) []string { return strings.Split(a, ".") })
+
 	pathw.Validator = func(s string) error {
 		if validator != nil {
 			err := validator(s)
@@ -61,12 +70,19 @@ func NewFileSetting(
 			s = valPath(s)
 		}
 
-		u, err := storage.ParseURI("file://" + s)
-		if err != nil {
-			return err
-		}
-
-		if !filter.Matches(u) {
+		_, f := path.Split(strings.ReplaceAll(s, `\`, "/"))
+		if len(filterSplit) > 0 && !slicez.SomeFunc(filterSplit, func(a []string) bool {
+			if len(a) < 2 {
+				a = append(a, "*")
+			}
+			if a[0] == "*" && a[1] == "*" {
+				return true
+			}
+			if a[0] == "*" && strings.HasSuffix(f, a[1]) {
+				return true
+			}
+			return a[1] == "*" && strings.HasPrefix(f, a[0])
+		}) {
 			return errors.New("invalid file type")
 		}
 
@@ -89,42 +105,71 @@ func NewFileSetting(
 		&clayout.Expand{},
 		pathw,
 		widget.NewButtonWithIcon("", theme.FileImageIcon(), func() {
-			d := dialog.NewFileOpen(func(uc fyne.URIReadCloser, err error) {
-				if uc != nil {
-					sPath = uc.URI().Path()
-					uc.Close()
+			defer logger.HandlePanic()
 
-					if setText != nil {
-						pathw.SetText(setText(sPath))
-					} else {
-						pathw.SetText(sPath)
-					}
-				}
-			}, window)
-			d.SetFilter(filter)
+			// d := dialog.NewFileOpen(func(uc fyne.URIReadCloser, err error) {
+			// 	if uc != nil {
+			// 		sPath = uc.URI().Path()
+			// 		uc.Close()
 
-			b, _ := path.Split(strings.ReplaceAll(path.Clean(sPath), `\`, "/"))
-			u, err := storage.ParseURI("file://" + b)
-			if err != nil {
+			// 		if setText != nil {
+			// 			pathw.SetText(setText(sPath))
+			// 		} else {
+			// 			pathw.SetText(sPath)
+			// 		}
+			// 	}
+			// }, window)
+			// d.SetFilter(filter)
+
+			// u, err := storage.ParseURI("file://" + b)
+			// if err != nil {
+			// 	dialog.NewError(err, window).Show()
+			// 	return
+			// }
+
+			// ul, err := storage.ListerForURI(u)
+			// if err != nil {
+			// 	dialog.NewError(err, window).Show()
+			// 	return
+			// }
+			// d.SetLocation(ul)
+			// d.Show()
+
+			s := sPath
+			if _, err := os.Stat(s); os.IsNotExist(err) {
+				s = launcher.DATA_PATH
+			}
+			b, f := path.Split(strings.ReplaceAll(s, `\`, "/"))
+
+			res, err := cfdutil.ShowOpenFileDialog(cfd.DialogConfig{
+				Title:       "Select Folder",
+				Role:        "SelectFolder",
+				Folder:      strings.ReplaceAll(b, `/`, `\`),
+				FileName:    f,
+				FileFilters: []cfd.FileFilter{{Pattern: filter}},
+			})
+
+			if err == cfd.ErrorCancelled {
+				return
+			} else if err != nil {
 				dialog.NewError(err, window).Show()
 				return
 			}
-
-			ul, err := storage.ListerForURI(u)
-			if err != nil {
-				dialog.NewError(err, window).Show()
-				return
+			if setText != nil {
+				pathw.SetText(setText(res))
+			} else {
+				pathw.SetText(res)
 			}
-			d.SetLocation(ul)
-			d.Show()
 		}),
 	))
 }
 
 func NewFolderSetting(
 	window fyne.Window, label, pathStr string, validator func(path string) error,
-	changed func(path string), setText func(path string) string, unsetText func(text string) string,
+	changed func(path string), setText, unsetText func(string) string,
 ) fyne.Widget {
+	defer logger.HandlePanic()
+
 	sPath := pathStr
 
 	pathw := widget.NewEntry()
@@ -134,6 +179,8 @@ func NewFolderSetting(
 		pathw.SetText(sPath)
 	}
 	pathw.Validator = func(s string) error {
+		defer logger.HandlePanic()
+
 		if unsetText != nil {
 			s = unsetText(s)
 		}
@@ -157,6 +204,8 @@ func NewFolderSetting(
 		return nil
 	}
 	pathw.OnChanged = func(s string) {
+		defer logger.HandlePanic()
+
 		if pathw.Validate() == nil {
 			sPath = s
 			if changed != nil {
@@ -169,34 +218,60 @@ func NewFolderSetting(
 		&clayout.Expand{},
 		pathw,
 		widget.NewButtonWithIcon("", theme.FolderOpenIcon(), func() {
-			d := dialog.NewFolderOpen(func(lu fyne.ListableURI, err error) {
-				if lu != nil {
-					sPath = lu.Path()
-					if setText != nil {
-						pathw.SetText(setText(sPath))
-					} else {
-						pathw.SetText(sPath)
-					}
-				}
-			}, window)
+			defer logger.HandlePanic()
+
+			// d := dialog.NewFolderOpen(func(lu fyne.ListableURI, err error) {
+			// 	if lu != nil {
+			// 		sPath = lu.Path()
+			// 		if setText != nil {
+			// 			pathw.SetText(setText(sPath))
+			// 		} else {
+			// 			pathw.SetText(sPath)
+			// 		}
+			// 	}
+			// }, window)
 
 			s := sPath
 			if unsetText != nil {
 				s = unsetText(s)
 			}
-			u, err := storage.ParseURI("file://" + s)
-			if err != nil {
-				dialog.NewError(err, window).Show()
-				return
-			}
 
-			ul, err := storage.ListerForURI(u)
-			if err != nil {
+			// u, err := storage.ParseURI("file://" + s)
+			// if err != nil {
+			// 	dialog.NewError(err, window).Show()
+			// 	return
+			// }
+
+			// ul, err := storage.ListerForURI(u)
+			// if err != nil {
+			// 	dialog.NewError(err, window).Show()
+			// 	return
+			// }
+			// d.SetLocation(ul)
+			// d.Show()
+
+			if _, err := os.Stat(s); os.IsNotExist(err) {
+				s = launcher.DATA_PATH
+			}
+			b, f := path.Split(strings.ReplaceAll(s, `\`, "/"))
+			res, err := cfdutil.ShowPickFolderDialog(cfd.DialogConfig{
+				Title:    "Select Folder",
+				Role:     "SelectFolder",
+				Folder:   strings.ReplaceAll(b, `/`, `\`),
+				FileName: f,
+			})
+
+			if err == cfd.ErrorCancelled {
+				return
+			} else if err != nil {
 				dialog.NewError(err, window).Show()
 				return
 			}
-			d.SetLocation(ul)
-			d.Show()
+			if setText != nil {
+				pathw.SetText(setText(res))
+			} else {
+				pathw.SetText(res)
+			}
 		}),
 	))
 }
@@ -214,7 +289,7 @@ func NewIconSetting(window fyne.Window, provider IconProvider) *fyne.Container {
 			fyne.NewSize(270, 200),
 			icon,
 		),
-		NewFileSetting(window, "Icon", provider.IconPath(), storage.NewExtensionFileFilter([]string{".png", ".jpg"}), func(path string) error {
+		NewFileSetting(window, "Icon", provider.IconPath(), "*.png;*.jpg", func(path string) error {
 			return nil
 		}, func(path string) {
 			provider.SetIconPath(path)

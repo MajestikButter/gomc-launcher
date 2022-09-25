@@ -10,7 +10,7 @@ import (
 
 const FILE_MODE = 0777
 
-var DATA_PATH, GAMES_FILE, SETTINGS_FILE, STATE_FILE string
+var ASSETS_PATH, DATA_PATH, PROFILES_PATH, GAMES_FILE, SETTINGS_FILE, STATE_FILE string
 
 func init() {
 	cwd, err := os.Getwd()
@@ -18,7 +18,9 @@ func init() {
 		panic(err)
 	}
 
+	ASSETS_PATH = path.Join(cwd, "assets")
 	DATA_PATH = path.Join(cwd, "data")
+	PROFILES_PATH = path.Join(DATA_PATH, "profiles")
 	GAMES_FILE = path.Join(DATA_PATH, "games.json")
 	SETTINGS_FILE = path.Join(DATA_PATH, "settings.json")
 	STATE_FILE = path.Join(DATA_PATH, "state.json")

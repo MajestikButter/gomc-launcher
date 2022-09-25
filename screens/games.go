@@ -8,12 +8,15 @@ import (
 	"github.com/MajestikButter/gomc-launcher/ccontainer"
 	"github.com/MajestikButter/gomc-launcher/cwidget"
 	"github.com/MajestikButter/gomc-launcher/launcher"
+	"github.com/MajestikButter/gomc-launcher/logger"
 	"github.com/MajestikButter/gomc-launcher/preset"
 	"github.com/modfin/henry/mapz"
 	"github.com/modfin/henry/slicez"
 )
 
 func (s *Screens) CreateGames(l *launcher.Launcher) *fyne.Container {
+	defer logger.HandlePanic()
+
 	le := len(l.Games) + 1
 	content := make([]fyne.CanvasObject, le)
 	sorted := slicez.SortFunc(mapz.Keys(l.Games), func(a string, b string) bool {

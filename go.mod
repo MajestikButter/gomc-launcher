@@ -37,3 +37,9 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	honnef.co/go/js/dom v0.0.0-20210725211120-f030747120f2 // indirect
 )
+
+require (
+	github.com/go-ole/go-ole v1.2.6 // indirect
+	github.com/google/uuid v1.1.2 // indirect
+	github.com/harry1453/go-common-file-dialog v1.2.0
+)

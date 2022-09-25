@@ -2,6 +2,7 @@ package screens
 
 import (
 	"fmt"
+	"path"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -14,23 +15,34 @@ import (
 	"github.com/MajestikButter/gomc-launcher/preset"
 )
 
+func (s *Screens) RefreshSubfolders(p *game.Profile, subVBox *fyne.Container) {
+	subVBox.RemoveAll()
+	for f := range p.Subfolders {
+		n := f
+		subVBox.Add(container.NewHBox(
+			widget.NewLabel(f),
+			layout.NewSpacer(),
+			widget.NewButtonWithIcon("", theme.SettingsIcon(), func() {
+				s.DialogEditSubfolder(p, n, subVBox)
+			}),
+		))
+	}
+	subVBox.Add(
+		widget.NewButtonWithIcon("New Subfolder", theme.FolderNewIcon(), func() {
+			p.Subfolders["new_subfolder"] = path.Join(p.Path, "new_subfolder")
+			s.DialogEditSubfolder(p, "new_subfolder", subVBox)
+		}),
+	)
+}
+
 func (s *Screens) DialogEditProfile(l *launcher.Launcher, g *game.Game, p *game.Profile, name string) {
 	var d dialog.Dialog
 	oldName := name
 	n := &name
 
-	subfolders := []fyne.CanvasObject{}
-	for f := range p.Subfolders {
-		n := f
-		subfolders = append(subfolders, container.NewHBox(
-			widget.NewLabel(f),
-			layout.NewSpacer(),
-			widget.NewButtonWithIcon("", theme.SettingsIcon(), func() {
-				s.DialogEditSubfolder(p, n)
-			}),
-		))
-	}
-	subScroll := container.NewVScroll(container.NewVBox(subfolders...))
+	subVBox := container.NewVBox()
+	s.RefreshSubfolders(p, subVBox)
+	subScroll := container.NewVScroll(subVBox)
 	subScroll.SetMinSize(fyne.NewSize(0, 80))
 
 	content := container.NewHBox(

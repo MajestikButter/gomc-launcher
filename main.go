@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -9,22 +8,12 @@ import (
 	"github.com/MajestikButter/gomc-launcher/launcher"
 	"github.com/MajestikButter/gomc-launcher/logger"
 	"github.com/MajestikButter/gomc-launcher/screens"
-	"github.com/go-errors/errors"
 )
-
-func HandlePanic() {
-	if e := recover(); e != nil {
-		err := errors.Wrap(e, 2)
-		logger.RPrintf("\n\n====================================[ ERROR ]====================================\n\nMessage: %s\n\nStack: %s\n\n=================================================================================\n\n", err.Error(), err.Stack())
-		logger.WriteLog()
-		os.Exit(1)
-	}
-}
 
 var LAUNCHER *launcher.Launcher
 
 func init() {
-	defer HandlePanic()
+	defer logger.HandlePanic()
 
 	l := launcher.New()
 	l.Load()
@@ -32,7 +21,7 @@ func init() {
 }
 
 func main() {
-	defer HandlePanic()
+	defer logger.HandlePanic()
 
 	l := LAUNCHER
 
