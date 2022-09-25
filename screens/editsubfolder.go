@@ -20,60 +20,57 @@ func (s *Screens) DialogEditSubfolder(p *game.Profile, name string, subVBox *fyn
 	oldName := name
 	n := &name
 	pa := strings.ReplaceAll(path.Clean(p.Path), `\`, "/")
-	content := container.NewHBox(
-		container.NewVBox(
-			preset.NewFolderSetting(s.Window, "Folder", *n,
-				func(pathStr string) error {
-					if !strings.HasPrefix(strings.ReplaceAll(path.Clean(pathStr), `\`, "/"), pa) {
-						return errors.New("folder must be a subfolder of the profile path")
-					}
-					return nil
-				},
-				func(path string) {
-					*n = path
-				},
-				func(text string) string {
-					if !strings.HasPrefix(strings.ReplaceAll(path.Clean(text), `\`, "/"), pa) {
-						return text
-					}
-					return text[len(pa)+1:]
-				},
-				func(text string) string {
-					return path.Join(pa, text)
-				},
-			),
-			preset.NewFolderSetting(s.Window, "Destination", p.Subfolders[*n], nil, func(path string) {
-				p.Subfolders[oldName] = path
-			}, nil, nil),
-			widget.NewSeparator(),
-			widget.NewAccordion(
-				widget.NewAccordionItem("Advanced", container.NewVBox(
-					widget.NewButtonWithIcon("Delete", theme.DeleteIcon(), func() {
-						msg := widget.NewLabel(
-							fmt.Sprintf("This action is irreversible and cannot be undone. Be sure you would like to delete '%s' before clicking the 'Delete' button below", *n),
-						)
-						msg.Wrapping = fyne.TextWrapWord
-
-						dialog.ShowCustomConfirm(
-							"Are you sure you want to delete this subfolder?",
-							"Delete",
-							"Cancel",
-							msg,
-							func(b bool) {
-								if !b {
-									return
-								}
-								delete(p.Subfolders, *n)
-								d.Hide()
-							},
-							s.Window,
-						)
-					}),
-				)),
-			),
-			widget.NewLabel("                                                                                                     "),
+	content := container.NewVBox(
+		preset.NewFolderSetting(s.Window, "Folder", *n,
+			func(pathStr string) error {
+				if !strings.HasPrefix(strings.ReplaceAll(path.Clean(pathStr), `\`, "/"), pa) {
+					return errors.New("folder must be a subfolder of the profile path")
+				}
+				return nil
+			},
+			func(path string) {
+				*n = path
+			},
+			func(text string) string {
+				if !strings.HasPrefix(strings.ReplaceAll(path.Clean(text), `\`, "/"), pa) {
+					return text
+				}
+				return text[len(pa)+1:]
+			},
+			func(text string) string {
+				return path.Join(pa, text)
+			},
 		),
-		preset.NewIconSetting(s.Window, p),
+		preset.NewFolderSetting(s.Window, "Destination", p.Subfolders[*n], nil, func(path string) {
+			p.Subfolders[oldName] = path
+		}, nil, nil),
+		widget.NewSeparator(),
+		widget.NewAccordion(
+			widget.NewAccordionItem("Advanced", container.NewVBox(
+				widget.NewButtonWithIcon("Delete", theme.DeleteIcon(), func() {
+					msg := widget.NewLabel(
+						fmt.Sprintf("This action is irreversible and cannot be undone. Be sure you would like to delete '%s' before clicking the 'Delete' button below", *n),
+					)
+					msg.Wrapping = fyne.TextWrapWord
+
+					dialog.ShowCustomConfirm(
+						"Are you sure you want to delete this subfolder?",
+						"Delete",
+						"Cancel",
+						msg,
+						func(b bool) {
+							if !b {
+								return
+							}
+							delete(p.Subfolders, *n)
+							d.Hide()
+						},
+						s.Window,
+					)
+				}),
+			)),
+		),
+		widget.NewLabel("                                                                                                     "),
 	)
 	d = dialog.NewCustom("Edit Subfolder", "Close", content, s.Window)
 	d.Show()

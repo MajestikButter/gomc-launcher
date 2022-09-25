@@ -1,3 +1,11 @@
+# v0.3.1
+
+## Fixes
+
+- Removed unused icon setting from subfolders
+
+#
+
 # v0.3.0
 
 ## Improvements
