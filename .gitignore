@@ -1,4 +1,4 @@
 bin
 data
 logs
-gen_manifest.bat
+*.syso

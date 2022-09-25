@@ -1,3 +1,12 @@
+# v0.2.1
+
+## Bug fixes
+
+- Icon now shows on the executable
+- Executable will now ask for administrator privilege in order to create symbolic links
+
+#
+
 # v0.2.0
 
 ## Features
